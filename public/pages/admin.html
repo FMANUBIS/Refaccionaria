@@ -1,0 +1,1038 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>AutoPartes MX — Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --red: #E63946; --red-dark: #9B1D24; --orange: #FF6B35; --gold: #F4A261;
+    --green: #3FB950; --blue: #58A6FF; --purple: #BC8CFF;
+    --bg: #080A0C; --surface: #0D1117; --surface2: #161B22; --surface3: #1C2128;
+    --border: #21262D; --text: #E6EDF3; --muted: #8B949E;
+    --font-display: 'Bebas Neue', sans-serif;
+    --font-body: 'Rajdhani', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+  }
+  body { background: var(--bg); color: var(--text); font-family: var(--font-body); min-height: 100vh; display: flex; }
+
+  /* ===== SIDEBAR ===== */
+  .sidebar {
+    width: 240px; min-height: 100vh; background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex; flex-direction: column;
+    position: fixed; left: 0; top: 0; bottom: 0; z-index: 100;
+  }
+  .sidebar-header {
+    padding: 24px 20px;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+  }
+  .sidebar-header::after {
+    content: ''; position: absolute; bottom: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--red), var(--orange));
+  }
+  .logo { display: flex; align-items: center; gap: 10px; }
+  .logo-icon { width: 36px; height: 36px; background: linear-gradient(135deg, var(--red), var(--red-dark)); border-radius: 2px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+  .logo-text { font-family: var(--font-display); font-size: 22px; letter-spacing: 2px; }
+  .logo-text span { color: var(--red); }
+  .admin-badge {
+    margin-top: 8px;
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 3px 8px;
+    background: rgba(230,57,70,0.1);
+    border: 1px solid rgba(230,57,70,0.3);
+    border-radius: 2px;
+    font-size: 10px; font-weight: 700; letter-spacing: 2px; color: var(--red);
+    text-transform: uppercase;
+  }
+  .admin-badge::before { content: ''; width: 6px; height: 6px; background: var(--red); border-radius: 50%; animation: blink 1.5s ease-in-out infinite; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+  .sidebar-nav { flex: 1; padding: 16px 0; }
+  .nav-section { padding: 8px 20px 4px; font-size: 10px; font-weight: 700; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; }
+  .nav-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 20px; cursor: pointer;
+    font-size: 14px; font-weight: 600; color: var(--muted);
+    transition: all 0.15s; border-left: 3px solid transparent;
+    letter-spacing: 0.5px;
+  }
+  .nav-item:hover { background: var(--surface2); color: var(--text); }
+  .nav-item.active { background: rgba(230,57,70,0.08); color: var(--red); border-left-color: var(--red); }
+  .nav-item .icon { font-size: 16px; width: 20px; text-align: center; }
+
+  /* Indicador online */
+  .online-count {
+    margin: 0 20px 8px;
+    padding: 10px 12px;
+    background: rgba(63,185,80,0.05);
+    border: 1px solid rgba(63,185,80,0.15);
+    border-radius: 2px;
+  }
+  .online-label { font-size: 10px; font-weight: 700; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; }
+  .online-num { font-family: var(--font-display); font-size: 28px; color: var(--green); letter-spacing: 2px; }
+  .online-sub { font-size: 11px; color: var(--muted); }
+
+  .sidebar-footer { padding: 16px 20px; border-top: 1px solid var(--border); }
+  .user-info { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+  .avatar { width: 34px; height: 34px; background: linear-gradient(135deg, var(--red), var(--orange)); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; }
+  .user-name { font-size: 13px; font-weight: 600; }
+  .user-role { font-size: 11px; color: var(--red); }
+  .btn-logout { width: 100%; padding: 8px; background: transparent; border: 1px solid var(--border); border-radius: 2px; color: var(--muted); font-family: var(--font-body); font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.15s; }
+  .btn-logout:hover { border-color: var(--red); color: var(--red); }
+
+  /* ===== MAIN ===== */
+  .main { margin-left: 240px; flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+
+  .topbar {
+    height: 60px; background: var(--surface); border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 28px; position: sticky; top: 0; z-index: 50;
+  }
+  .page-title { font-family: var(--font-display); font-size: 24px; letter-spacing: 2px; color: var(--text); }
+  .topbar-right { display: flex; align-items: center; gap: 16px; }
+  .clock { font-family: var(--font-mono); font-size: 13px; color: var(--muted); }
+  .btn-add {
+    padding: 8px 18px;
+    background: linear-gradient(135deg, var(--red), var(--red-dark));
+    border: none; border-radius: 2px; color: #fff;
+    font-family: var(--font-display); font-size: 15px; letter-spacing: 2px;
+    cursor: pointer; transition: opacity 0.15s;
+  }
+  .btn-add:hover { opacity: 0.85; }
+
+  .content { padding: 24px 28px; flex: 1; }
+
+  /* ===== STATS CARDS ===== */
+  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+  .stat-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 2px;
+    padding: 18px 20px; position: relative; overflow: hidden;
+  }
+  .stat-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; }
+  .stat-card.red::before { background: linear-gradient(90deg, var(--red), var(--orange)); }
+  .stat-card.green::before { background: var(--green); }
+  .stat-card.blue::before { background: var(--blue); }
+  .stat-card.gold::before { background: var(--gold); }
+  .stat-label { font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); }
+  .stat-val { font-family: var(--font-display); font-size: 36px; letter-spacing: 2px; margin: 4px 0 2px; }
+  .stat-card.red .stat-val { color: var(--red); }
+  .stat-card.green .stat-val { color: var(--green); }
+  .stat-card.blue .stat-val { color: var(--blue); }
+  .stat-card.gold .stat-val { color: var(--gold); }
+  .stat-sub { font-size: 12px; color: var(--muted); }
+
+  /* ===== TABS ===== */
+  .section-tabs { display: flex; gap: 0; margin-bottom: 20px; border: 1px solid var(--border); border-radius: 2px; overflow: hidden; width: fit-content; }
+  .stab { padding: 8px 20px; background: none; border: none; color: var(--muted); font-family: var(--font-body); font-size: 13px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; transition: all 0.15s; }
+  .stab.active { background: linear-gradient(135deg, var(--red), var(--red-dark)); color: #fff; }
+
+  /* ===== TABLA ===== */
+  .table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 2px; overflow: hidden; }
+  .table-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+  .table-title { font-family: var(--font-display); font-size: 18px; letter-spacing: 1px; }
+  .search-box {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--surface2); border: 1px solid var(--border); border-radius: 2px;
+    padding: 6px 12px;
+  }
+  .search-box input { background: none; border: none; outline: none; color: var(--text); font-family: var(--font-body); font-size: 14px; width: 200px; }
+  .search-box input::placeholder { color: var(--muted); }
+
+  table { width: 100%; border-collapse: collapse; }
+  th { padding: 10px 16px; font-size: 10px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); text-align: left; border-bottom: 1px solid var(--border); background: var(--surface2); }
+  td { padding: 12px 16px; font-size: 14px; font-weight: 500; border-bottom: 1px solid rgba(33,38,45,0.7); vertical-align: middle; }
+  tr:hover td { background: rgba(255,255,255,0.02); }
+  tr:last-child td { border-bottom: none; }
+
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 2px; font-size: 11px; font-weight: 700; letter-spacing: 1px; }
+  .badge.green { background: rgba(63,185,80,0.1); color: var(--green); border: 1px solid rgba(63,185,80,0.2); }
+  .badge.red { background: rgba(230,57,70,0.1); color: var(--red); border: 1px solid rgba(230,57,70,0.2); }
+  .badge.gold { background: rgba(244,162,97,0.1); color: var(--gold); border: 1px solid rgba(244,162,97,0.2); }
+  .badge.blue { background: rgba(88,166,255,0.1); color: var(--blue); border: 1px solid rgba(88,166,255,0.2); }
+
+  .price { font-family: var(--font-mono); font-size: 13px; }
+  .price.green { color: var(--green); }
+
+  .actions { display: flex; gap: 8px; }
+  .btn-edit, .btn-delete {
+    padding: 5px 12px; border-radius: 2px; border: none; cursor: pointer;
+    font-family: var(--font-body); font-size: 12px; font-weight: 700; letter-spacing: 1px; transition: opacity 0.15s;
+  }
+  .btn-edit { background: rgba(88,166,255,0.1); color: var(--blue); border: 1px solid rgba(88,166,255,0.2); }
+  .btn-delete { background: rgba(230,57,70,0.1); color: var(--red); border: 1px solid rgba(230,57,70,0.2); }
+  .btn-edit:hover, .btn-delete:hover { opacity: 0.7; }
+
+  /* Paginación */
+  .pagination { padding: 14px 20px; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+  .page-info { font-size: 12px; color: var(--muted); }
+  .page-btns { display: flex; gap: 4px; }
+  .page-btn { padding: 5px 10px; background: var(--surface2); border: 1px solid var(--border); border-radius: 2px; color: var(--muted); font-family: var(--font-body); font-size: 12px; cursor: pointer; transition: all 0.15s; }
+  .page-btn:hover, .page-btn.active { background: var(--red); border-color: var(--red); color: #fff; }
+
+  /* ===== VENTAS EN TIEMPO REAL ===== */
+  .realtime-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+  .realtime-card { background: var(--surface); border: 1px solid var(--border); border-radius: 2px; }
+  .rc-header { padding: 14px 18px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+  .rc-title { font-family: var(--font-display); font-size: 16px; letter-spacing: 1px; }
+  .rc-live { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; color: var(--green); letter-spacing: 1px; }
+  .rc-live::before { content: ''; width: 6px; height: 6px; background: var(--green); border-radius: 50%; animation: blink 1s infinite; }
+  .rc-body { padding: 12px 18px; }
+  .order-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid rgba(33,38,45,0.5); }
+  .order-item:last-child { border-bottom: none; }
+  .order-user { display: flex; align-items: center; gap: 10px; }
+  .order-avatar { width: 32px; height: 32px; background: linear-gradient(135deg, var(--red), var(--orange)); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; }
+  .order-name { font-size: 14px; font-weight: 600; }
+  .order-time { font-size: 11px; color: var(--muted); font-family: var(--font-mono); }
+  .order-amount { font-family: var(--font-mono); font-size: 14px; color: var(--green); }
+
+  /* ===== MODAL ===== */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(8,10,12,0.9);
+    display: none; align-items: center; justify-content: center; z-index: 200;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 4px;
+    width: 560px; max-width: 95vw; max-height: 90vh; overflow-y: auto;
+    animation: modalIn 0.2s cubic-bezier(0.16,1,0.3,1);
+  }
+  @keyframes modalIn { from{transform:scale(0.95);opacity:0} to{transform:scale(1);opacity:1} }
+  .modal-header { padding: 20px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; position: relative; }
+  .modal-header::after { content:''; position:absolute; bottom:0; left:0; right:0; height:2px; background: linear-gradient(90deg, var(--red), var(--orange)); }
+  .modal-title { font-family: var(--font-display); font-size: 22px; letter-spacing: 2px; }
+  .modal-close { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 20px; padding: 0 4px; transition: color 0.15s; }
+  .modal-close:hover { color: var(--red); }
+  .modal-body { padding: 24px; }
+  .modal-footer { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; gap: 10px; justify-content: flex-end; }
+
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .form-grid .full { grid-column: 1 / -1; }
+  .field { margin-bottom: 0; }
+  .field label { display: block; font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+  .field input, .field select { width: 100%; padding: 10px 12px; background: var(--surface2); border: 1px solid var(--border); border-radius: 2px; color: var(--text); font-family: var(--font-body); font-size: 14px; font-weight: 500; outline: none; transition: border-color 0.2s; }
+  .field input:focus, .field select:focus { border-color: var(--red); }
+  .field select option { background: var(--surface2); }
+
+  .btn-cancel { padding: 10px 20px; background: transparent; border: 1px solid var(--border); border-radius: 2px; color: var(--muted); font-family: var(--font-display); font-size: 15px; letter-spacing: 2px; cursor: pointer; }
+  .btn-cancel:hover { border-color: var(--muted); color: var(--text); }
+  .btn-save { padding: 10px 24px; background: linear-gradient(135deg, var(--red), var(--red-dark)); border: none; border-radius: 2px; color: #fff; font-family: var(--font-display); font-size: 15px; letter-spacing: 2px; cursor: pointer; }
+
+  /* Toast */
+  .toast { position: fixed; bottom: 24px; right: 24px; z-index: 300; display: flex; flex-direction: column; gap: 8px; }
+  .toast-item { padding: 12px 18px; border-radius: 2px; font-size: 14px; font-weight: 600; animation: toastIn 0.3s ease; }
+  .toast-item.success { background: rgba(63,185,80,0.15); border: 1px solid rgba(63,185,80,0.3); color: var(--green); }
+  .toast-item.error { background: rgba(230,57,70,0.15); border: 1px solid rgba(230,57,70,0.3); color: var(--red); }
+  @keyframes toastIn { from{transform:translateX(20px);opacity:0} to{transform:translateX(0);opacity:1} }
+
+  .loading-row td { text-align: center; padding: 40px; color: var(--muted); font-family: var(--font-mono); font-size: 13px; }
+  .empty-row td { text-align: center; padding: 40px; color: var(--muted); }
+
+  /* Sección oculta */
+  .section { display: none; }
+  .section.active { display: block; }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-header">
+    <div class="logo">
+      <div class="logo-icon">🔧</div>
+      <div class="logo-text">AUTO<span>PARTES</span></div>
+    </div>
+    <div class="admin-badge">Admin Panel</div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-section">Principal</div>
+    <div class="nav-item active" onclick="goSection('dashboard')">
+      <span class="icon">📊</span> Dashboard
+    </div>
+    <div class="nav-item" onclick="goSection('articulos')">
+      <span class="icon">🔩</span> Artículos
+    </div>
+    <div class="nav-item" onclick="goSection('ventas')">
+      <span class="icon">🛒</span> Ventas
+    </div>
+    <div class="nav-item" onclick="goSection('clientes')">
+      <span class="icon">👤</span> Clientes
+    </div>
+    <div class="nav-section">Catálogos</div>
+    <div class="nav-item" onclick="goSection('proveedores')">
+      <span class="icon">🏭</span> Proveedores
+    </div>
+    <div class="nav-item" onclick="goSection('empleados')">
+      <span class="icon">👷</span> Empleados
+    </div>
+    <div class="nav-item" onclick="goSection('almacenes')">
+      <span class="icon">🏪</span> Almacenes
+    </div>
+
+    <div class="nav-section">Monitor</div>
+    <div class="online-count">
+      <div class="online-label">Usuarios online</div>
+      <div class="online-num" id="onlineCount">0</div>
+      <div class="online-sub">actualizando...</div>
+    </div>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="user-info">
+      <div class="avatar" id="sideAvatar">A</div>
+      <div>
+        <div class="user-name" id="sideUserName">Administrador</div>
+        <div class="user-role">Admin</div>
+      </div>
+    </div>
+    <button class="btn-logout" onclick="logout()">Cerrar sesión</button>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+  <div class="topbar">
+    <div class="page-title" id="pageTitle">DASHBOARD</div>
+    <div class="topbar-right">
+      <div class="clock" id="clockDisplay">--:--:--</div>
+      <button class="btn-add" id="btnAdd" onclick="openEntityModal(window.currentSection,'create')" style="display:none">+ AGREGAR</button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- ===== DASHBOARD ===== -->
+    <div class="section active" id="sec-dashboard">
+      <div class="stats-grid">
+        <div class="stat-card red">
+          <div class="stat-label">Total artículos</div>
+          <div class="stat-val" id="statArticulos">—</div>
+          <div class="stat-sub">en catálogo</div>
+        </div>
+        <div class="stat-card green">
+          <div class="stat-label">Ventas hoy</div>
+          <div class="stat-val" id="statVentas">—</div>
+          <div class="stat-sub">registradas</div>
+        </div>
+        <div class="stat-card blue">
+          <div class="stat-label">Clientes</div>
+          <div class="stat-val" id="statClientes">—</div>
+          <div class="stat-sub">registrados</div>
+        </div>
+        <div class="stat-card gold">
+          <div class="stat-label">Ingreso total</div>
+          <div class="stat-val" id="statIngresos">—</div>
+          <div class="stat-sub">acumulado</div>
+        </div>
+      </div>
+
+      <div class="realtime-grid">
+        <!-- Últimas ventas -->
+        <div class="realtime-card">
+          <div class="rc-header">
+            <div class="rc-title">ÚLTIMAS VENTAS</div>
+            <div class="rc-live">EN VIVO</div>
+          </div>
+          <div class="rc-body" id="lastSalesBody">
+            <div style="text-align:center;padding:20px;color:var(--muted);font-size:13px">Cargando...</div>
+          </div>
+        </div>
+        <!-- Artículos bajo stock -->
+        <div class="realtime-card">
+          <div class="rc-header">
+            <div class="rc-title">BAJO STOCK ⚠️</div>
+            <div class="rc-live" style="color:var(--red)">ALERTA</div>
+          </div>
+          <div class="rc-body" id="lowStockBody">
+            <div style="text-align:center;padding:20px;color:var(--muted);font-size:13px">Cargando...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Resumen IVA -->
+      <div class="table-wrap">
+        <div class="table-header">
+          <div class="table-title">RESUMEN FINANCIERO (IVA 16%)</div>
+        </div>
+        <table>
+          <thead><tr>
+            <th>Venta ID</th><th>Fecha</th><th>Cliente</th><th>Subtotal</th><th>IVA (16%)</th><th>Total</th><th>Forma de pago</th>
+          </tr></thead>
+          <tbody id="financeTableBody">
+            <tr class="loading-row"><td colspan="7">Cargando datos financieros...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ===== ARTÍCULOS ===== -->
+    <div class="section" id="sec-articulos">
+      <div class="table-wrap">
+        <div class="table-header">
+          <div class="table-title">ARTÍCULOS — INVENTARIO</div>
+          <div class="search-box">
+            <span>🔍</span>
+            <input type="text" id="searchArticulos" placeholder="Buscar artículo..." oninput="filterTable('articulos')"/>
+          </div>
+        </div>
+        <div style="overflow-x:auto">
+          <table>
+            <thead><tr>
+              <th>ID</th><th>Descripción</th><th>Marca</th><th>Modelo</th>
+              <th>P. Compra</th><th>P. Venta</th><th>Existencia</th><th>Stock Min</th><th>Estado</th><th>Acciones</th>
+            </tr></thead>
+            <tbody id="articulosBody">
+              <tr class="loading-row"><td colspan="10">Cargando artículos...</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="pagination">
+          <div class="page-info" id="artPage">—</div>
+          <div class="page-btns" id="artPageBtns"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== VENTAS ===== -->
+    <div class="section" id="sec-ventas">
+      <div class="table-wrap">
+        <div class="table-header">
+          <div class="table-title">VENTAS REGISTRADAS</div>
+          <div class="search-box">
+            <span>🔍</span>
+            <input type="text" id="searchVentas" placeholder="Buscar venta..." oninput="filterTable('ventas')"/>
+          </div>
+        </div>
+        <table>
+          <thead><tr>
+            <th>ID</th><th>Fecha</th><th>Cliente ID</th><th>Empleado ID</th>
+            <th>Subtotal</th><th>IVA</th><th>Total</th><th>Forma Pago</th><th>Acciones</th>
+          </tr></thead>
+          <tbody id="ventasBody">
+            <tr class="loading-row"><td colspan="9">Cargando ventas...</td></tr>
+          </tbody>
+        </table>
+        <div class="pagination">
+          <div class="page-info" id="ventPage">—</div>
+          <div class="page-btns" id="ventPageBtns"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== CLIENTES ===== -->
+    <div class="section" id="sec-clientes">
+      <div class="table-wrap">
+        <div class="table-header">
+          <div class="table-title">CLIENTES</div>
+          <div class="search-box">
+            <span>🔍</span>
+            <input type="text" id="searchClientes" placeholder="Buscar cliente..." oninput="filterTable('clientes')"/>
+          </div>
+        </div>
+        <table>
+          <thead><tr>
+            <th>ID</th><th>Nombre</th><th>Teléfono</th><th>Email</th><th>RFC</th><th>Acciones</th>
+          </tr></thead>
+          <tbody id="clientesBody">
+            <tr class="loading-row"><td colspan="6">Cargando clientes...</td></tr>
+          </tbody>
+        </table>
+        <div class="pagination">
+          <div class="page-info" id="cliPage">—</div>
+          <div class="page-btns" id="cliPageBtns"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== PROVEEDORES ===== -->
+    <div class="section" id="sec-proveedores">
+      <div class="table-wrap">
+        <div class="table-header"><div class="table-title">PROVEEDORES</div></div>
+        <table>
+          <thead><tr><th>ID</th><th>Nombre</th><th>Dirección</th><th>Teléfono</th><th>Email</th><th>RFC</th><th>Acciones</th></tr></thead>
+          <tbody id="proveedoresBody">
+            <tr class="loading-row"><td colspan="7">Cargando...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ===== EMPLEADOS ===== -->
+    <div class="section" id="sec-empleados">
+      <div class="table-wrap">
+        <div class="table-header"><div class="table-title">EMPLEADOS</div></div>
+        <table>
+          <thead><tr><th>ID</th><th>Nombre</th><th>Puesto</th><th>Teléfono</th><th>Email</th><th>Salario</th><th>Acciones</th></tr></thead>
+          <tbody id="empleadosBody">
+            <tr class="loading-row"><td colspan="7">Cargando...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ===== ALMACENES ===== -->
+    <div class="section" id="sec-almacenes">
+      <div class="table-wrap">
+        <div class="table-header"><div class="table-title">ALMACENES</div></div>
+        <table>
+          <thead><tr><th>ID</th><th>Nombre</th><th>Ubicación</th><th>Capacidad</th><th>Encargado</th><th>Acciones</th></tr></thead>
+          <tbody id="almacenesBody">
+            <tr class="loading-row"><td colspan="6">Cargando...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</main>
+
+<!-- MODAL ARTÍCULO -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modalTitle">NUEVO ARTÍCULO</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="editId"/>
+      <div id="modalForm" class="form-grid"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal()">CANCELAR</button>
+      <button class="btn-save" onclick="saveEntity()">GUARDAR</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toastContainer"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCkVH2cfR2cQ3Dw79lJ0c9JcnS2hFICWhc",
+  authDomain: "refaccionaria-api.firebaseapp.com",
+  projectId: "refaccionaria-api",
+  storageBucket: "refaccionaria-api.firebasestorage.app",
+  messagingSenderId: "504298703119",
+  appId: "1:504298703119:web:2ccadf138190a407a7967a"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const API = '/api';
+const ADMIN_EMAILS = ['admin@autopartes.mx', 'carlosdiaz@admin.com'];
+let currentUser = null;
+let currentModalEntity = 'articulos';
+
+const entityTitles = {
+  articulos: 'Artículo',
+  proveedores: 'Proveedor',
+  empleados: 'Empleado',
+  almacenes: 'Almacén'
+};
+
+const entityForms = {
+  articulos: [
+    { id: 'descripcion', label: 'Descripción', type: 'text', placeholder: 'Ej. Filtro de aceite' },
+    { id: 'marca', label: 'Marca', type: 'text', placeholder: 'Bosch' },
+    { id: 'modelo', label: 'Modelo', type: 'text', placeholder: 'FO-123' },
+    { id: 'precioCompra', label: 'Precio de compra', type: 'number', step: '0.01', placeholder: '80.00' },
+    { id: 'precioVenta', label: 'Precio de venta', type: 'number', step: '0.01', placeholder: '120.00' },
+    { id: 'existencia', label: 'Existencia', type: 'number', placeholder: '50' },
+    { id: 'stockMinimo', label: 'Stock mínimo', type: 'number', placeholder: '10' },
+    { id: 'stockMaximo', label: 'Stock máximo', type: 'number', placeholder: '100' },
+    { id: 'idProveedor', label: 'Proveedor ID', type: 'number', placeholder: '1' },
+    { id: 'idAlmacen', label: 'Almacén ID', type: 'number', placeholder: '1' }
+  ],
+  proveedores: [
+    { id: 'nombre', label: 'Nombre', type: 'text', placeholder: 'Nombre del proveedor' },
+    { id: 'direccion', label: 'Dirección', type: 'text', placeholder: 'Calle y número' },
+    { id: 'telefono', label: 'Teléfono', type: 'text', placeholder: '5512345678' },
+    { id: 'email', label: 'Email', type: 'email', placeholder: 'proveedor@mail.com' },
+    { id: 'rfc', label: 'RFC', type: 'text', placeholder: 'RFC123456ABC' }
+  ],
+  empleados: [
+    { id: 'nombre', label: 'Nombre', type: 'text', placeholder: 'Nombre completo' },
+    { id: 'puesto', label: 'Puesto', type: 'text', placeholder: 'Ventas' },
+    { id: 'telefono', label: 'Teléfono', type: 'text', placeholder: '5512345678' },
+    { id: 'email', label: 'Email', type: 'email', placeholder: 'empleado@mail.com' },
+    { id: 'salario', label: 'Salario', type: 'number', step: '0.01', placeholder: '12000.00' },
+    { id: 'fechaContratacion', label: 'Fecha de contratación', type: 'date', placeholder: '' }
+  ],
+  almacenes: [
+    { id: 'nombre', label: 'Nombre', type: 'text', placeholder: 'Almacén Norte' },
+    { id: 'ubicacion', label: 'Ubicación', type: 'text', placeholder: 'Ciudad' },
+    { id: 'capacidad', label: 'Capacidad', type: 'number', placeholder: '1000' },
+    { id: 'encargado', label: 'Encargado', type: 'text', placeholder: 'Nombre del encargado' }
+  ]
+};
+
+function renderModalFields(entity, item = {}) {
+  const form = document.getElementById('modalForm');
+  form.innerHTML = '';
+  const fields = entityForms[entity] || [];
+  fields.forEach(field => {
+    const value = item[field.id] != null ? item[field.id] : '';
+    const input = document.createElement('input');
+    input.type = field.type;
+    input.id = field.id;
+    input.placeholder = field.placeholder || '';
+    input.step = field.step || undefined;
+    input.value = value;
+    const wrapper = document.createElement('div');
+    wrapper.className = 'field';
+    if (field.full) wrapper.classList.add('full');
+    const label = document.createElement('label');
+    label.textContent = field.label;
+    wrapper.appendChild(label);
+    wrapper.appendChild(input);
+    form.appendChild(wrapper);
+  });
+}
+
+function couldShowAddButton(section) {
+  return ['articulos', 'proveedores', 'empleados', 'almacenes'].includes(section);
+}
+
+async function loadEntityData(entity) {
+  if (entity === 'proveedores') return loadProveedores();
+  if (entity === 'empleados') return loadEmpleados();
+  if (entity === 'almacenes') return loadAlmacenes();
+  if (entity === 'articulos') return loadArticulos();
+  return null;
+}
+
+async function saveEntity() {
+  const entity = currentModalEntity;
+  const id = document.getElementById('editId').value;
+  const fields = entityForms[entity] || [];
+  const body = {};
+  fields.forEach(field => {
+    const el = document.getElementById(field.id);
+    if (!el) return;
+    if (field.type === 'number') body[field.id] = el.value ? Number(el.value) : null;
+    else body[field.id] = el.value.trim();
+  });
+  if (entity === 'articulos') {
+    if (!body.descripcion) return toast('La descripción es requerida.', 'error');
+  }
+  if (!body.nombre) return toast('El nombre es requerido.', 'error');
+
+  try {
+    const method = id ? 'PUT' : 'POST';
+    const path = `/${entity}${id ? `/${id}` : ''}`;
+    await apiFetch(`/api${path}`, { method, body: JSON.stringify(body) });
+    toast(`${entity === 'articulos' ? 'Artículo' : entity.slice(0,-1).charAt(0).toUpperCase() + entity.slice(1,-1)} ${id ? 'actualizado' : 'creado'} correctamente.`);
+    closeModal();
+    await loadEntityData(entity);
+  } catch(e) {}
+}
+
+window.openEntityModal = function(entity, mode='create', item = null) {
+  currentModalEntity = entity;
+  document.getElementById('modalOverlay').classList.add('open');
+  document.getElementById('editId').value = mode === 'edit' && item ? (item.idArticulo || item.idProveedor || item.idEmpleado || item.idAlmacen) : '';
+  const titleEntity = entityTitles[entity] || entity.slice(0,-1).replace(/./, c => c.toUpperCase());
+  const title = mode === 'edit' ? `EDITAR ${titleEntity}` : `NUEVO ${titleEntity}`;
+  document.getElementById('modalTitle').textContent = title;
+  renderModalFields(entity, mode === 'edit' && item ? item : {});
+};
+
+window.closeModal = () => document.getElementById('modalOverlay').classList.remove('open');
+
+async function loadOnlineCount() {
+  try {
+    const res = await apiFetch('/auth/online');
+    document.getElementById('onlineCount').textContent = res.count;
+  } catch (error) {
+    console.error('No se pudo obtener online count:', error.message);
+  }
+}
+
+onAuthStateChanged(auth, async (user) => {
+  if (!user) {
+    window.location.href = 'login.html';
+    return;
+  }
+  const email = user.email.toLowerCase();
+  if (!ADMIN_EMAILS.includes(email) && !email.endsWith('@admin.com')) {
+    window.location.href = 'usuario.html';
+    return;
+  }
+  currentUser = user;
+  const name = user.displayName || user.email.split('@')[0];
+  document.getElementById('sideUserName').textContent = name;
+  document.getElementById('sideAvatar').textContent = name[0]?.toUpperCase() || 'A';
+  loadDashboard();
+  loadOnlineCount();
+  setInterval(loadOnlineCount, 5000);
+});
+
+window.logout = async function() {
+  await signOut(auth);
+  window.location.href = 'login.html';
+};
+
+// ===== NAVEGACIÓN =====
+window.currentSection = 'dashboard';
+window.goSection = function(sec) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.getElementById(`sec-${sec}`).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.querySelectorAll('.nav-item')[['dashboard','articulos','ventas','clientes','proveedores','empleados','almacenes'].indexOf(sec)]?.classList.add('active');
+  document.getElementById('pageTitle').textContent = sec.toUpperCase();
+  window.currentSection = sec;
+  const btnAdd = document.getElementById('btnAdd');
+  btnAdd.style.display = couldShowAddButton(sec) ? 'block' : 'none';
+  if (sec === 'articulos') loadArticulos();
+  else if (sec === 'ventas') loadVentas();
+  else if (sec === 'clientes') loadClientes();
+  else if (sec === 'proveedores') loadProveedores();
+  else if (sec === 'empleados') loadEmpleados();
+  else if (sec === 'almacenes') loadAlmacenes();
+  else loadDashboard();
+};
+
+// ===== HELPERS =====
+const fmt = v => new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(v);
+window.toast = function(msg, type='success') {
+  const t = document.createElement('div');
+  t.className = `toast-item ${type}`;
+  t.textContent = msg;
+  document.getElementById('toastContainer').appendChild(t);
+  setTimeout(() => t.remove(), 3500);
+};
+
+async function apiFetch(path, opts) {
+  try {
+    const res = await fetch(API + path, { headers: { 'Content-Type': 'application/json' }, ...opts });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return await res.json();
+  } catch(e) {
+    toast('Error de conexión con la API: ' + e.message, 'error');
+    throw e;
+  }
+}
+
+// ===== DASHBOARD =====nasync function loadDashboard() {
+  try {
+    const [arts, ventas, clientes] = await Promise.all([
+      apiFetch('/articulos'), apiFetch('/ventas'), apiFetch('/clientes')
+    ]);
+    const aList = arts.data || arts;
+    const vList = ventas.data || ventas;
+    const cList = clientes.data || clientes;
+
+    document.getElementById('statArticulos').textContent = aList.length;
+    document.getElementById('statVentas').textContent = vList.length;
+    document.getElementById('statClientes').textContent = cList.length;
+    const total = vList.reduce((s, v) => s + parseFloat(v.total || 0), 0);
+    document.getElementById('statIngresos').textContent = fmt(total).replace('MX$','$');
+
+    // Últimas 5 ventas
+    const last5 = [...vList].slice(-5).reverse();
+    document.getElementById('lastSalesBody').innerHTML = last5.map(v => `
+      <div class="order-item">
+        <div class="order-user">
+          <div class="order-avatar">${v.idVenta || '#'}</div>
+          <div>
+            <div class="order-name">Venta #${v.idVenta}</div>
+            <div class="order-time">${v.fecha || '—'} · ${v.formaPago || ''}</div>
+          </div>
+        </div>
+        <div class="order-amount">${fmt(v.total)}</div>
+      </div>
+    `).join('') || '<div style="color:var(--muted);padding:10px;font-size:13px">Sin ventas</div>';
+
+    // Bajo stock
+    const lowStock = aList.filter(a => parseInt(a.existencia) <= parseInt(a.stockMinimo));
+    document.getElementById('lowStockBody').innerHTML = lowStock.slice(0,6).map(a => `
+      <div class="order-item">
+        <div class="order-user">
+          <div class="order-avatar" style="background:linear-gradient(135deg,var(--red),var(--red-dark));font-size:10px">⚠</div>
+          <div>
+            <div class="order-name">${a.descripcion}</div>
+            <div class="order-time">Existencia: ${a.existencia} · Min: ${a.stockMinimo}</div>
+          </div>
+        </div>
+        <span class="badge red">BAJO</span>
+      </div>
+    `).join('') || '<div style="color:var(--green);padding:10px;font-size:13px">✓ Stock en óptimas condiciones</div>';
+
+    // Tabla financiera
+    document.getElementById('financeTableBody').innerHTML = vList.map(v => {
+      const sub = parseFloat(v.total) / 1.16;
+      const iva = parseFloat(v.total) - sub;
+      return `<tr>
+        <td><span class="badge blue">#${v.idVenta}</span></td>
+        <td style="font-family:var(--font-mono);font-size:12px">${v.fecha || '—'}</td>
+        <td>Cliente #${v.idCliente || '—'}</td>
+        <td class="price">${fmt(sub)}</td>
+        <td class="price" style="color:var(--gold)">${fmt(iva)}</td>
+        <td class="price green">${fmt(v.total)}</td>
+        <td><span class="badge ${v.formaPago==='Efectivo'?'green':v.formaPago==='Tarjeta'?'blue':'gold'}">${v.formaPago||'—'}</span></td>
+      </tr>`;
+    }).join('') || '<tr class="empty-row"><td colspan="7">Sin datos</td></tr>';
+
+  } catch(e) { /* ya manejado */ }
+
+
+// ===== ARTÍCULOS =====
+let artData = [], artPage = 1; const artPer = 10;
+async function loadArticulos() {
+  document.getElementById('articulosBody').innerHTML = '<tr class="loading-row"><td colspan="10">Cargando...</td></tr>';
+  try {
+    const res = await apiFetch('/articulos');
+    artData = res.data || res;
+    renderArticulos();
+  } catch(e) {}
+}
+
+function renderArticulos(data = artData) {
+  const total = data.length;
+  const pages = Math.ceil(total / artPer);
+  const slice = data.slice((artPage-1)*artPer, artPage*artPer);
+  document.getElementById('artPage').textContent = `Mostrando ${slice.length} de ${total} artículos`;
+  document.getElementById('articulosBody').innerHTML = slice.map(a => `
+    <tr>
+      <td><span class="badge blue">#${a.idArticulo}</span></td>
+      <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${a.descripcion}">${a.descripcion}</td>
+      <td>${a.marca || '—'}</td>
+      <td style="font-family:var(--font-mono);font-size:12px">${a.modelo || '—'}</td>
+      <td class="price">${fmt(a.precioCompra)}</td>
+      <td class="price green">${fmt(a.precioVenta)}</td>
+      <td style="font-family:var(--font-mono)">${a.existencia}</td>
+      <td style="font-family:var(--font-mono)">${a.stockMinimo}</td>
+      <td><span class="badge ${parseInt(a.existencia)<=parseInt(a.stockMinimo)?'red':'green'}">${parseInt(a.existencia)<=parseInt(a.stockMinimo)?'BAJO':'OK'}</span></td>
+      <td>
+        <div class="actions">
+          <button class="btn-edit" onclick="openEntityModal('articulos','edit', ${JSON.stringify(a).replace(/"/g,'&quot;')})">EDITAR</button>
+          <button class="btn-delete" onclick="deleteArticulo(${a.idArticulo},'${a.descripcion}')">ELIMINAR</button>
+        </div>
+      </td>
+    </tr>
+  `).join('') || '<tr class="empty-row"><td colspan="10">Sin artículos</td></tr>';
+  // Paginación
+  let btns = '';
+  for (let i=1;i<=pages;i++) btns += `<button class="page-btn ${i===artPage?'active':''}" onclick="artGoPage(${i})">${i}</button>`;
+  document.getElementById('artPageBtns').innerHTML = btns;
+}
+
+window.artGoPage = function(p) { artPage = p; renderArticulos(); };
+window.filterTable = function(type) {
+  const q = document.getElementById(`search${type.charAt(0).toUpperCase()+type.slice(1)}`).value.toLowerCase();
+  if (type === 'articulos') renderArticulos(artData.filter(a => JSON.stringify(a).toLowerCase().includes(q)));
+  if (type === 'ventas') renderVentasData(ventData.filter(v => JSON.stringify(v).toLowerCase().includes(q)));
+  if (type === 'clientes') renderClientesData(cliData.filter(c => JSON.stringify(c).toLowerCase().includes(q)));
+};
+
+// ===== MODAL ARTÍCULO =====
+window.closeModal = () => document.getElementById('modalOverlay').classList.remove('open');
+
+window.saveEntity = async function() {
+  const entity = currentModalEntity;
+  const id = document.getElementById('editId').value;
+  const fields = entityForms[entity] || [];
+  const body = {};
+  fields.forEach(field => {
+    const el = document.getElementById(field.id);
+    if (!el) return;
+    if (field.type === 'number') body[field.id] = el.value ? Number(el.value) : null;
+    else body[field.id] = el.value.trim();
+  });
+  if (!body.nombre && entity !== 'articulos') return toast('El nombre es requerido.', 'error');
+  if (entity === 'articulos' && !body.descripcion) return toast('La descripción es requerida.', 'error');
+
+  try {
+    const method = id ? 'PUT' : 'POST';
+    const path = `/api/${entity}${id ? `/${id}` : ''}`;
+    await apiFetch(path, { method, body: JSON.stringify(body) });
+    toast(`${entityTitles[entity] || 'Elemento'} ${id ? 'actualizado' : 'creado'} correctamente.`);
+    closeModal();
+    await loadEntityData(entity);
+  } catch(e) {}
+};
+
+window.deleteArticulo = async function(id, nombre) {
+  if (!confirm(`¿Eliminar "${nombre}"? Esta acción no se puede deshacer.`)) return;
+  try {
+    await apiFetch(`/articulos/${id}`, { method: 'DELETE' });
+    toast('Artículo eliminado.');
+    loadArticulos();
+  } catch(e) {}
+};
+
+// ===== VENTAS =====
+let ventData = [], ventPage = 1; const ventPer = 10;
+async function loadVentas() {
+  document.getElementById('ventasBody').innerHTML = '<tr class="loading-row"><td colspan="9">Cargando...</td></tr>';
+  try {
+    const res = await apiFetch('/ventas');
+    ventData = res.data || res;
+    renderVentasData(ventData);
+  } catch(e) {}
+}
+function renderVentasData(data) {
+  const slice = data.slice((ventPage-1)*ventPer, ventPage*ventPer);
+  document.getElementById('ventPage').textContent = `Mostrando ${slice.length} de ${data.length}`;
+  document.getElementById('ventasBody').innerHTML = slice.map(v => {
+    const sub = parseFloat(v.total)/1.16;
+    const iva = parseFloat(v.total)-sub;
+    return `<tr>
+      <td><span class="badge blue">#${v.idVenta}</span></td>
+      <td style="font-family:var(--font-mono);font-size:12px">${v.fecha||'—'}</td>
+      <td>👤 ${v.idCliente||'—'}</td>
+      <td>👷 ${v.idEmpleado||'—'}</td>
+      <td class="price">${fmt(sub)}</td>
+      <td class="price" style="color:var(--gold)">${fmt(iva)}</td>
+      <td class="price green">${fmt(v.total)}</td>
+      <td><span class="badge ${v.formaPago==='Efectivo'?'green':v.formaPago==='Tarjeta'?'blue':'gold'}">${v.formaPago||'—'}</span></td>
+      <td><div class="actions">
+        <button class="btn-delete" onclick="deleteVenta(${v.idVenta})">ELIMINAR</button>
+      </div></td>
+    </tr>`;
+  }).join('') || '<tr class="empty-row"><td colspan="9">Sin ventas</td></tr>';
+}
+window.deleteVenta = async function(id) {
+  if (!confirm(`¿Eliminar venta #${id}?`)) return;
+  try { await apiFetch(`/ventas/${id}`, { method: 'DELETE' }); toast('Venta eliminada.'); loadVentas(); } catch(e) {}
+};
+
+// ===== CLIENTES =====
+let cliData = [];
+async function loadClientes() {
+  document.getElementById('clientesBody').innerHTML = '<tr class="loading-row"><td colspan="6">Cargando...</td></tr>';
+  try {
+    const res = await apiFetch('/clientes');
+    cliData = res.data || res;
+    renderClientesData(cliData);
+  } catch(e) {}
+}
+function renderClientesData(data) {
+  document.getElementById('cliPage').textContent = `${data.length} clientes`;
+  document.getElementById('clientesBody').innerHTML = data.map(c => `
+    <tr>
+      <td><span class="badge blue">#${c.idCliente}</span></td>
+      <td style="font-weight:600">${c.nombre}</td>
+      <td style="font-family:var(--font-mono);font-size:12px">${c.telefono||'—'}</td>
+      <td style="color:var(--muted)">${c.email||'—'}</td>
+      <td style="font-family:var(--font-mono);font-size:12px">${c.rfc||'—'}</td>
+      <td><div class="actions">
+        <button class="btn-delete" onclick="deleteCliente(${c.idCliente},'${c.nombre}')">ELIMINAR</button>
+      </div></td>
+    </tr>
+  `).join('') || '<tr class="empty-row"><td colspan="6">Sin clientes</td></tr>';
+}
+window.deleteCliente = async function(id,nombre) {
+  if (!confirm(`¿Eliminar cliente "${nombre}"?`)) return;
+  try { await apiFetch(`/clientes/${id}`, { method: 'DELETE' }); toast('Cliente eliminado.'); loadClientes(); } catch(e) {}
+};
+
+// ===== PROVEEDORES =====
+async function loadProveedores() {
+  document.getElementById('proveedoresBody').innerHTML = '<tr class="loading-row"><td colspan="7">Cargando...</td></tr>';
+  try {
+    const res = await apiFetch('/proveedores');
+    const data = res.data || res;
+    document.getElementById('proveedoresBody').innerHTML = data.map(p => `
+      <tr>
+        <td><span class="badge blue">#${p.idProveedor}</span></td>
+        <td style="font-weight:600">${p.nombre}</td>
+        <td style="color:var(--muted)">${p.direccion||'—'}</td>
+        <td style="font-family:var(--font-mono);font-size:12px">${p.telefono||'—'}</td>
+        <td style="color:var(--muted)">${p.email||'—'}</td>
+        <td style="font-family:var(--font-mono);font-size:12px">${p.rfc||'—'}</td>
+        <td><div class="actions">
+          <button class="btn-edit" onclick="openEntityModal('proveedores','edit', ${JSON.stringify(p).replace(/"/g,'&quot;')})">EDITAR</button>
+          <button class="btn-delete" onclick="deleteProveedor(${p.idProveedor})">ELIMINAR</button>
+        </div></td>
+      </tr>
+    `).join('') || '<tr class="empty-row"><td colspan="7">Sin proveedores</td></tr>';
+  } catch(e) {}
+}
+window.deleteProveedor = async function(id) {
+  if (!confirm(`¿Eliminar proveedor #${id}?`)) return;
+  try { await apiFetch(`/proveedores/${id}`, { method: 'DELETE' }); toast('Proveedor eliminado.'); loadProveedores(); } catch(e) {}
+};
+
+// ===== EMPLEADOS =====
+async function loadEmpleados() {
+  document.getElementById('empleadosBody').innerHTML = '<tr class="loading-row"><td colspan="7">Cargando...</td></tr>';
+  try {
+    const res = await apiFetch('/empleados');
+    const data = res.data || res;
+    document.getElementById('empleadosBody').innerHTML = data.map(e => `
+      <tr>
+        <td><span class="badge blue">#${e.idEmpleado}</span></td>
+        <td style="font-weight:600">${e.nombre}</td>
+        <td><span class="badge gold">${e.puesto||'—'}</span></td>
+        <td style="font-family:var(--font-mono);font-size:12px">${e.telefono||'—'}</td>
+        <td style="color:var(--muted)">${e.email||'—'}</td>
+        <td class="price green">${e.salario?fmt(e.salario):'—'}</td>
+        <td><div class="actions">
+          <button class="btn-edit" onclick="openEntityModal('empleados','edit', ${JSON.stringify(e).replace(/"/g,'&quot;')})">EDITAR</button>
+          <button class="btn-delete" onclick="deleteEmpleado(${e.idEmpleado})">ELIMINAR</button>
+        </div></td>
+      </tr>
+    `).join('') || '<tr class="empty-row"><td colspan="7">Sin empleados</td></tr>';
+  } catch(e) {}
+}
+window.deleteEmpleado = async function(id) {
+  if (!confirm(`¿Eliminar empleado #${id}?`)) return;
+  try { await apiFetch(`/empleados/${id}`, { method: 'DELETE' }); toast('Empleado eliminado.'); loadEmpleados(); } catch(e) {}
+};
+
+// ===== ALMACENES =====
+async function loadAlmacenes() {
+  document.getElementById('almacenesBody').innerHTML = '<tr class="loading-row"><td colspan="6">Cargando...</td></tr>';
+  try {
+    const res = await apiFetch('/almacenes');
+    const data = res.data || res;
+    document.getElementById('almacenesBody').innerHTML = data.map(a => `
+      <tr>
+        <td><span class="badge blue">#${a.idAlmacen}</span></td>
+        <td style="font-weight:600">${a.nombre}</td>
+        <td style="color:var(--muted)">${a.ubicacion||'—'}</td>
+        <td style="font-family:var(--font-mono)">${a.capacidad||'—'}</td>
+        <td>${a.encargado||'—'}</td>
+        <td><div class="actions">
+          <button class="btn-edit" onclick="openEntityModal('almacenes','edit', ${JSON.stringify(a).replace(/"/g,'&quot;')})">EDITAR</button>
+          <button class="btn-delete" onclick="deleteAlmacen(${a.idAlmacen})">ELIMINAR</button>
+        </div></td>
+      </tr>
+    `).join('') || '<tr class="empty-row"><td colspan="6">Sin almacenes</td></tr>';
+  } catch(e) {}
+}
+window.deleteAlmacen = async function(id) {
+  if (!confirm(`¿Eliminar almacén #${id}?`)) return;
+  try { await apiFetch(`/almacenes/${id}`, { method: 'DELETE' }); toast('Almacén eliminado.'); loadAlmacenes(); } catch(e) {}
+};
+
+// ===== RELOJ =====
+function updateClock() {
+  const now = new Date();
+  document.getElementById('clockDisplay').textContent =
+    now.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+}
+updateClock();
+setInterval(updateClock, 1000);
+
+// Cerrar modal al hacer clic fuera
+document.getElementById('modalOverlay').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+
+// Auto-refresh dashboard cada 30s
+setInterval(() => { if (currentSection === 'dashboard') loadDashboard(); }, 30000);
+</script>
+</body>
+</html>

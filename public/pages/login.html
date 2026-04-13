@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>AutoPartes MX — Acceso</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --red: #E63946;
+    --red-dark: #9B1D24;
+    --orange: #FF6B35;
+    --gold: #F4A261;
+    --bg: #080A0C;
+    --surface: #0D1117;
+    --surface2: #161B22;
+    --border: #21262D;
+    --text: #E6EDF3;
+    --muted: #8B949E;
+    --font-display: 'Bebas Neue', sans-serif;
+    --font-body: 'Rajdhani', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* Fondo animado con engranajes/líneas */
+  .bg-grid {
+    position: fixed; inset: 0; z-index: 0;
+    background-image:
+      linear-gradient(rgba(230,57,70,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(230,57,70,0.03) 1px, transparent 1px);
+    background-size: 60px 60px;
+    animation: gridMove 20s linear infinite;
+  }
+  @keyframes gridMove { from { transform: translateY(0); } to { transform: translateY(60px); } }
+
+  .bg-glow {
+    position: fixed; z-index: 0;
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(230,57,70,0.08) 0%, transparent 70%);
+    top: -200px; left: -100px;
+    animation: glowPulse 4s ease-in-out infinite;
+  }
+  .bg-glow2 {
+    position: fixed; z-index: 0;
+    width: 400px; height: 400px;
+    background: radial-gradient(circle, rgba(244,162,97,0.05) 0%, transparent 70%);
+    bottom: -100px; right: -100px;
+    animation: glowPulse 6s ease-in-out infinite reverse;
+  }
+  @keyframes glowPulse { 0%,100%{opacity:.5;transform:scale(1)} 50%{opacity:1;transform:scale(1.1)} }
+
+  /* Partículas */
+  .particles { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+  .particle {
+    position: absolute;
+    width: 2px; height: 2px;
+    background: var(--red);
+    border-radius: 50%;
+    animation: float linear infinite;
+    opacity: 0;
+  }
+  @keyframes float {
+    0%   { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+    10%  { opacity: 0.6; }
+    90%  { opacity: 0.6; }
+    100% { transform: translateY(-10vh) rotate(720deg); opacity: 0; }
+  }
+
+  /* Contenedor principal */
+  .container {
+    position: relative; z-index: 1;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    width: 900px;
+    max-width: 95vw;
+    min-height: 580px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+    animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  @keyframes slideUp { from{transform:translateY(40px);opacity:0} to{transform:translateY(0);opacity:1} }
+
+  /* Panel izquierdo — branding */
+  .brand-panel {
+    background: linear-gradient(135deg, #0D1117 0%, #161B22 50%, #0D1117 100%);
+    border-right: 1px solid var(--border);
+    padding: 48px 40px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    position: relative;
+    overflow: hidden;
+  }
+  .brand-panel::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--red), var(--orange), var(--gold));
+  }
+  .brand-deco {
+    position: absolute;
+    right: -60px; top: 50%;
+    transform: translateY(-50%);
+    width: 200px; height: 200px;
+    border: 1px solid rgba(230,57,70,0.15);
+    border-radius: 50%;
+    animation: spin 30s linear infinite;
+  }
+  .brand-deco::before {
+    content: '';
+    position: absolute;
+    inset: 20px;
+    border: 1px solid rgba(244,162,97,0.1);
+    border-radius: 50%;
+    animation: spin 20s linear infinite reverse;
+  }
+  @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+
+  .logo-mark {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .logo-icon {
+    width: 44px; height: 44px;
+    background: linear-gradient(135deg, var(--red), var(--red-dark));
+    border-radius: 2px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+  }
+  .logo-text {
+    font-family: var(--font-display);
+    font-size: 28px;
+    letter-spacing: 2px;
+    color: var(--text);
+  }
+  .logo-text span { color: var(--red); }
+
+  .brand-headline {
+    font-family: var(--font-display);
+    font-size: 52px;
+    line-height: 1;
+    letter-spacing: 2px;
+    color: var(--text);
+    margin-top: 48px;
+  }
+  .brand-headline em {
+    font-style: normal;
+    background: linear-gradient(90deg, var(--red), var(--orange));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .brand-desc {
+    font-size: 15px;
+    color: var(--muted);
+    margin-top: 16px;
+    line-height: 1.6;
+    font-weight: 400;
+  }
+
+  .brand-stats {
+    display: flex;
+    gap: 24px;
+    margin-top: 32px;
+  }
+  .stat {
+    text-align: center;
+  }
+  .stat-num {
+    font-family: var(--font-display);
+    font-size: 32px;
+    color: var(--red);
+    letter-spacing: 2px;
+    display: block;
+  }
+  .stat-label {
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .brand-footer {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--muted);
+    opacity: 0.5;
+  }
+
+  /* Panel derecho — formulario */
+  .form-panel {
+    background: var(--surface);
+    padding: 48px 40px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .form-header {
+    margin-bottom: 32px;
+  }
+  .form-title {
+    font-family: var(--font-display);
+    font-size: 36px;
+    letter-spacing: 2px;
+    color: var(--text);
+  }
+  .form-subtitle {
+    font-size: 14px;
+    color: var(--muted);
+    margin-top: 6px;
+  }
+
+  /* Tabs login/registro */
+  .tabs {
+    display: flex;
+    gap: 0;
+    margin-bottom: 28px;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .tab {
+    flex: 1;
+    padding: 10px;
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .tab.active {
+    background: linear-gradient(135deg, var(--red), var(--red-dark));
+    color: #fff;
+  }
+
+  /* Inputs */
+  .field { margin-bottom: 18px; }
+  .field label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  .field input {
+    width: 100%;
+    padding: 12px 16px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 15px;
+    font-weight: 500;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    outline: none;
+  }
+  .field input:focus {
+    border-color: var(--red);
+    box-shadow: 0 0 0 3px rgba(230,57,70,0.1);
+  }
+  .field input::placeholder { color: rgba(139,148,158,0.5); }
+
+  /* Botón principal */
+  .btn-primary {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(135deg, var(--red) 0%, var(--red-dark) 100%);
+    border: none;
+    border-radius: 2px;
+    color: #fff;
+    font-family: var(--font-display);
+    font-size: 18px;
+    letter-spacing: 3px;
+    cursor: pointer;
+    transition: transform 0.15s, opacity 0.15s;
+    position: relative;
+    overflow: hidden;
+    margin-top: 8px;
+  }
+  .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+  .btn-primary:active { transform: translateY(0); }
+  .btn-primary::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.1), transparent);
+    pointer-events: none;
+  }
+
+  /* Divider */
+  .divider {
+    display: flex; align-items: center; gap: 12px;
+    margin: 20px 0;
+    color: var(--muted);
+    font-size: 12px;
+    letter-spacing: 1px;
+  }
+  .divider::before, .divider::after {
+    content: ''; flex: 1;
+    height: 1px; background: var(--border);
+  }
+
+  /* Botón Google */
+  .btn-google {
+    width: 100%;
+    padding: 12px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+  }
+  .btn-google:hover { border-color: var(--muted); background: #1C2128; }
+
+  /* Alerta */
+  .alert {
+    padding: 10px 14px;
+    border-radius: 2px;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    display: none;
+  }
+  .alert.error { background: rgba(230,57,70,0.1); border: 1px solid rgba(230,57,70,0.3); color: #E63946; display: block; }
+  .alert.success { background: rgba(63,185,80,0.1); border: 1px solid rgba(63,185,80,0.3); color: #3FB950; display: block; }
+
+  /* Spinner */
+  .spinner {
+    display: none;
+    width: 18px; height: 18px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin2 0.7s linear infinite;
+    margin: 0 auto;
+  }
+  @keyframes spin2 { to{transform:rotate(360deg)} }
+
+  /* Olvidé contraseña */
+  .forgot {
+    text-align: right;
+    margin-top: -10px;
+    margin-bottom: 16px;
+  }
+  .forgot a {
+    font-size: 12px;
+    color: var(--red);
+    text-decoration: none;
+    cursor: pointer;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+
+  @media (max-width: 700px) {
+    .container { grid-template-columns: 1fr; }
+    .brand-panel { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="bg-grid"></div>
+<div class="bg-glow"></div>
+<div class="bg-glow2"></div>
+<div class="particles" id="particles"></div>
+
+<div class="container">
+  <!-- Panel de marca -->
+  <div class="brand-panel">
+    <div class="brand-deco"></div>
+    <div>
+      <div class="logo-mark">
+        <div class="logo-icon">🔧</div>
+        <div class="logo-text">AUTO<span>PARTES</span></div>
+      </div>
+      <div class="brand-headline">TU<br>TALLER,<br><em>SIEMPRE</em><br>LISTO.</div>
+      <p class="brand-desc">Sistema integral de gestión de refacciones automotrices. Control total de inventario, ventas y clientes.</p>
+      <div class="brand-stats">
+        <div class="stat"><span class="stat-num">40+</span><span class="stat-label">Artículos</span></div>
+        <div class="stat"><span class="stat-num">2</span><span class="stat-label">Almacenes</span></div>
+        <div class="stat"><span class="stat-num">24/7</span><span class="stat-label">En línea</span></div>
+      </div>
+    </div>
+    <div class="brand-footer">// AutoPartes MX v1.0 — Sistema de gestión</div>
+  </div>
+
+  <!-- Panel de formulario -->
+  <div class="form-panel">
+    <div class="form-header">
+      <div class="form-title">ACCESO</div>
+      <p class="form-subtitle">Ingresa con tus credenciales para continuar</p>
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" onclick="setTab('login')">Iniciar sesión</button>
+      <button class="tab" onclick="setTab('register')">Registrarse</button>
+    </div>
+
+    <div id="alertBox"></div>
+
+    <!-- Formulario login -->
+    <div id="loginForm">
+      <div class="field">
+        <label>Correo electrónico</label>
+        <input type="email" id="loginEmail" placeholder="correo@ejemplo.com" autocomplete="email"/>
+      </div>
+      <div class="field">
+        <label>Contraseña</label>
+        <input type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password"/>
+      </div>
+      <div class="forgot"><a onclick="resetPassword()">¿Olvidaste tu contraseña?</a></div>
+      <button type="button" class="btn-primary" onclick="loginEmail()">
+        <span id="loginBtnText">INGRESAR</span>
+        <div class="spinner" id="loginSpinner"></div>
+      </button>
+      <div class="divider">O</div>
+      <button type="button" class="btn-google" onclick="loginGoogle()">
+        <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z"/><path fill="#FBBC05" d="M3.964 10.707c-.18-.54-.282-1.117-.282-1.707 0-.59.102-1.167.282-1.707V4.961H.957C.347 6.175 0 7.55 0 9s.348 2.825.957 4.039l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.961L3.964 7.293C4.672 5.166 6.656 3.58 9 3.58z"/></svg>
+        Continuar con Google
+      </button>
+    </div>
+
+    <!-- Formulario registro -->
+    <div id="registerForm" style="display:none">
+      <div class="field">
+        <label>Nombre completo</label>
+        <input type="text" id="regName" placeholder="Juan Pérez" autocomplete="name"/>
+      </div>
+      <div class="field">
+        <label>Correo electrónico</label>
+        <input type="email" id="regEmail" placeholder="correo@ejemplo.com" autocomplete="email"/>
+      </div>
+      <div class="field">
+        <label>Contraseña</label>
+        <input type="password" id="regPass" placeholder="Mínimo 6 caracteres" autocomplete="new-password"/>
+      </div>
+      <button type="button" class="btn-primary" onclick="registerEmail()">
+        <span id="regBtnText">CREAR CUENTA</span>
+        <div class="spinner" id="regSpinner"></div>
+      </button>
+      <div class="divider">O</div>
+      <button type="button" class="btn-google" onclick="loginGoogle()">
+        <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z"/><path fill="#FBBC05" d="M3.964 10.707c-.18-.54-.282-1.117-.282-1.707 0-.59.102-1.167.282-1.707V4.961H.957C.347 6.175 0 7.55 0 9s.348 2.825.957 4.039l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.961L3.964 7.293C4.672 5.166 6.656 3.58 9 3.58z"/></svg>
+        Registrarse con Google
+      </button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import {
+    getAuth,
+    signInWithEmailAndPassword,
+    createUserWithEmailAndPassword,
+    GoogleAuthProvider,
+    signInWithPopup,
+    signInWithRedirect,
+    onAuthStateChanged,
+    signOut,
+    sendPasswordResetEmail,
+    updateProfile
+  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCkVH2cfR2cQ3Dw79lJ0c9JcnS2hFICWhc",
+    authDomain: "refaccionaria-api.firebaseapp.com",
+    projectId: "refaccionaria-api",
+    storageBucket: "refaccionaria-api.firebasestorage.app",
+    messagingSenderId: "504298703119",
+    appId: "1:504298703119:web:2ccadf138190a407a7967a"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const provider = new GoogleAuthProvider();
+  const ADMIN_EMAILS = ['admin@autopartes.mx', 'carlosdiaz@admin.com'];
+
+  window.setTab = (tab) => {
+    document.getElementById('loginForm').style.display = tab === 'login' ? 'block' : 'none';
+    document.getElementById('registerForm').style.display = tab === 'register' ? 'block' : 'none';
+    document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', (tab === 'login' && i === 0) || (tab === 'register' && i === 1)));
+  };
+
+  window.showAlert = (message) => {
+    alert(message);
+  };
+
+  const redirectLogic = (user) => {
+    if (!user) return;
+    const email = user.email.toLowerCase();
+    if (ADMIN_EMAILS.includes(email) || email.endsWith('@admin.com')) {
+      window.location.replace('admin.html');
+    } else {
+      window.location.replace('usuario.html');
+    }
+  };
+
+  onAuthStateChanged(auth, (user) => {
+    if (user) redirectLogic(user);
+  });
+
+  window.loginEmail = async () => {
+    const email = document.getElementById('loginEmail').value.trim();
+    const pass = document.getElementById('loginPass').value;
+    if (!email || !pass) {
+      showAlert('Completa correo y contraseña.');
+      return;
+    }
+    try {
+      const res = await signInWithEmailAndPassword(auth, email, pass);
+      redirectLogic(res.user);
+    } catch (error) {
+      showAlert(error.message);
+    }
+  };
+
+  window.registerEmail = async () => {
+    const nombre = document.getElementById('regName').value.trim();
+    const email = document.getElementById('regEmail').value.trim();
+    const pass = document.getElementById('regPass').value;
+    if (!nombre || !email || !pass) {
+      showAlert('Completa todos los campos para registrarte.');
+      return;
+    }
+    try {
+      const res = await createUserWithEmailAndPassword(auth, email, pass);
+      await updateProfile(res.user, { displayName: nombre });
+      redirectLogic(res.user);
+    } catch (error) {
+      showAlert(error.message);
+    }
+  };
+
+  window.loginGoogle = async () => {
+    try {
+      const res = await signInWithPopup(auth, provider);
+      redirectLogic(res.user);
+    } catch (error) {
+      if (error.code === 'auth/popup-closed-by-user') return;
+      if (error.code === 'auth/popup-blocked' || error.code === 'auth/cancelled-popup-request') {
+        try {
+          await signInWithRedirect(auth, provider);
+        } catch (redirectError) {
+          showAlert(redirectError.message);
+        }
+        return;
+      }
+      showAlert(error.message);
+    }
+  };
+
+  window.resetPassword = async () => {
+    const email = document.getElementById('loginEmail').value.trim();
+    if (!email) {
+      showAlert('Ingresa tu correo para recuperar la contraseña.');
+      return;
+    }
+    try {
+      await sendPasswordResetEmail(auth, email);
+      showAlert('Correo de recuperación enviado. Revisa tu bandeja.');
+    } catch (error) {
+      showAlert(error.message);
+    }
+  };
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      const active = document.getElementById('loginForm').style.display !== 'none' ? 'login' : 'register';
+      if (active === 'login') window.loginEmail();
+      else window.registerEmail();
+    }
+  });
+
+  const container = document.getElementById('particles');
+  for (let i = 0; i < 20; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.style.left = Math.random() * 100 + '%';
+    p.style.animationDuration = (8 + Math.random() * 12) + 's';
+    p.style.animationDelay = (Math.random() * 10) + 's';
+    p.style.width = p.style.height = (1 + Math.random() * 3) + 'px';
+    const colors = ['#E63946','#FF6B35','#F4A261'];
+    p.style.background = colors[Math.floor(Math.random() * colors.length)];
+    container.appendChild(p);
+  }
+</script>
+</body>
+</html>
